@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CT Task Router Configuration Schema",
+  "description": "Схема конфигурационного файла config.json для CT Task Router",
+  "type": "object",
+  "required": ["queue", "vault", "logging"],
+  "properties": {
+    "vault": {
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Базовый URL сервера Vault"
+        },
+        "auth_path": {
+          "type": "string",
+          "description": "Путь для аутентификации JWT (по умолчанию 'auth/jwt')"
+        }
+      },
+      "additionalProperties": false
+    },
+    "queue": {
+      "type": "object",
+      "required": ["type", "url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Тип очереди (например, redis)"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL подключения к очереди (например, redis://localhost:6379)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "logging": {
+      "type": "object",
+      "required": ["level", "log_file", "rotation"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "description": "Уровень логирования"
+        },
+        "log_file": {
+          "type": "string",
+          "pattern": "^.*\\.log$",
+          "description": "Путь к лог-файлу (должен оканчиваться на .log)"
+        },
+        "rotation": {
+          "type": "object",
+          "required": ["when", "backupCount"],
+          "properties": {
+            "when": {
+              "type": "string",
+              "description": "Период ротации (например, '1 day' или '00:00')"
+            },
+            "backupCount": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Сколько дней хранить старые логи"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

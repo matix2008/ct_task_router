@@ -1,0 +1,21 @@
+# requirements-dev.txt
+
+# Тестирование
+pytest
+pytest-cov
+pytest-mock
+httpx
+requests-mock
+
+# Проверка кода
+pylint
+mypy
+flake8
+
+# Типизация и автодополнение
+types-requests
+types-redis
+
+# Документация (опционально)
+mkdocs
+mkdocstrings[python]

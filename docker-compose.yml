@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  ct_task_router:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ct_task_router
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config.json:/config.json:ro
+      - ./.secrets.json:/.secrets.json:ro
+      - ./logs:/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # task_worker:
+  #   build:
+  #     context: ../task_worker_project  # 👉 путь до внешнего проекта
+  #     dockerfile: Dockerfile
+  #   container_name: task_worker
+  #   command: ["python", "worker.py"]
+  #   volumes:
+  #     - ../task_worker_project/config.json:/config.json:ro
+  #     - ../task_worker_project/.secrets.json:/.secrets.json:ro
+  #     - ./logs:/logs
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   depends_on:
+  #     - redis
+  #   restart: unless-stopped
+
+volumes:
+  redis_data:
