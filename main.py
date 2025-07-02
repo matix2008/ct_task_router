@@ -12,7 +12,7 @@ from app.queue.redis_queue import RedisQueue
 from app.auth.security import VaultClient
 from app.api.task_router import TaskRouter
 from app.config.loader import get_config, get_secrets
-from app.logs.setup import setup_logging
+from app.logging.setup import setup_logging
 
 
 def create_app() -> FastAPI:
