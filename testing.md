@@ -70,3 +70,21 @@
     docker logs ct_task_router
     docker exec -it redis redis-cli
     > KEYS *
+
+---
+
+В случае ошибок:
+
+1. Проверить статус Vault
+   docker exec -e VAULT_ADDR=http://127.0.0.1:8200 vault vault status
+
+2. Какие методы аутентификации включены
+   docker exec -e VAULT_ADDR=http://127.0.0.1:8200 vault vault auth list
+
+3. созданы ли политики
+   docker exec -e VAULT_ADDR=http://127.0.0.1:8200 vault vault policy read noop-policy
+
+4. есть ли пользователь service
+   docker exec -e VAULT_ADDR=http://127.0.0.1:8200 vault vault read auth/userpass/users/service
+
+5. 

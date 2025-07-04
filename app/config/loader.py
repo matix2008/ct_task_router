@@ -14,7 +14,7 @@ from jsonschema import validate, ValidationError
 # Пути к конфигурации и схеме
 CONFIG_PATH = "config.json"
 SECRETS_PATH = ".secrets.json"
-SCHEMA_PATH = "config/schema.json"
+SCHEMA_PATH = "app/config/schema.json"
 
 
 @lru_cache()
