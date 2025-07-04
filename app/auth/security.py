@@ -40,7 +40,7 @@ class VaultClient:
         self.vault_url = vault_url
         self.auth_path = auth_path
 
-        client.auth.jwt.login(mount_point=auth_path)
+        # Аутентификация в Vault не нужна -> client.auth.jwt.login(mount_point=auth_path)
 
     def authenticate_user(self, authorization: str, action: str) -> tuple:
         """
