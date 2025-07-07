@@ -96,7 +96,7 @@ def test_task_info_invalid_type_raises_valueerror(redis_queue, vault_client):
     with pytest.raises(HTTPException) as exc:
         router.routes[1].endpoint(taskid=task_uuid, authorization="Bearer ok")
     assert exc.value.status_code == 400
-    assert "Недопустимый тип задачи" in str(exc.value.detail)
+    assert "Invalid task type" in str(exc.value.detail)
 
 
 def test_health_check_returns_ok(redis_queue, vault_client):

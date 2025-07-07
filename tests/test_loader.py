@@ -96,7 +96,7 @@ def test_get_config_missing_file(tmp_path):
     loader.CONFIG_PATH = str(tmp_path / "missing.json")
     loader.SCHEMA_PATH = str(tmp_path / "schema.json")
     loader.get_config.cache_clear()
-    with pytest.raises(RuntimeError, match="Файл конфигурации не найден"):
+    with pytest.raises(RuntimeError, match="Configuration file not found"):
         loader.get_config()
 
 
@@ -111,7 +111,7 @@ def test_get_config_invalid_json(tmp_path):
     loader.SCHEMA_PATH = str(schema_file)
     loader.get_config.cache_clear()
 
-    with pytest.raises(RuntimeError, match="Ошибка загрузки конфигурации"):
+    with pytest.raises(RuntimeError, match="Error loading configuration"):
         loader.get_config()
 
 
@@ -136,7 +136,7 @@ def test_get_config_invalid_schema_json(tmp_path):
     loader.SCHEMA_PATH = str(schema)
     loader.get_config.cache_clear()
 
-    with pytest.raises(RuntimeError, match="Ошибка загрузки схемы"):
+    with pytest.raises(RuntimeError, match="Error loading schema"):
         loader.get_config()
 
 
@@ -162,7 +162,7 @@ def test_get_config_validation_error(tmp_path, valid_config_file):
     loader.SCHEMA_PATH = str(schema_path)
     loader.get_config.cache_clear()
 
-    with pytest.raises(RuntimeError, match="Ошибка валидации конфигурации"):
+    with pytest.raises(RuntimeError, match="Configuration validation error"):
         loader.get_config()
 
 
@@ -183,7 +183,7 @@ def test_get_secrets_missing(tmp_path):
     loader.SECRETS_PATH = str(tmp_path / "notfound.json")
     loader.get_secrets.cache_clear()
 
-    with pytest.raises(RuntimeError, match="Файл секретов не найден"):
+    with pytest.raises(RuntimeError, match="Secrets file not found"):
         loader.get_secrets()
 
 
@@ -195,5 +195,5 @@ def test_get_secrets_invalid_json(tmp_path):
     loader.SECRETS_PATH = str(secrets)
     loader.get_secrets.cache_clear()
 
-    with pytest.raises(RuntimeError, match="Ошибка загрузки секретов"):
+    with pytest.raises(RuntimeError, match="Error loading secrets"):
         loader.get_secrets()

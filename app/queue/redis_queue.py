@@ -39,7 +39,7 @@ class RedisQueue:
         # устанавливаем время жизни задачи
         self.client.expire(key, ttl_seconds or self.default_ttl)
 
-        logger.debug(f"Задача {task_uuid} сохранена с TTL {ttl_seconds or self.default_ttl} секунд")
+        logger.debug(f"Task {task_uuid} saved with TTL {ttl_seconds or self.default_ttl} seconds")
 
     def get_task(self, task_uuid: UUID) -> Optional[dict]:
         """
@@ -52,9 +52,9 @@ class RedisQueue:
         # читаем (не удаляя) данные задачи из Redis Hash
         raw = self.client.hgetall(key)
         if not raw:
-            logger.warning(f"Задача {task_uuid} не найдена в Redis")
+            logger.warning(f"Task {task_uuid} not found in Redis")
             return None
-        logger.debug(f"Задача {task_uuid} извлечена")
+        logger.debug(f"Task {task_uuid} retrieved")
         # было return {k.decode(): json.loads(v) for k, v in raw.items()}
         return TaskInfo.model_validate({k.decode(): json.loads(v) for k, v in raw.items()})
 
@@ -68,7 +68,7 @@ class RedisQueue:
         """
         key = f"task:{task_uuid}"
         self.client.hset(key, mapping={k: json.dumps(v) for k, v in updates.items()})
-        logger.debug(f"Задача {task_uuid} обновлена полями: {list(updates.keys())}")
+        logger.debug(f"Task {task_uuid} updated with fields: {list(updates.keys())}")
 
     def enqueue(self, queue_name: str, task_uuid: UUID) -> None:
         """
@@ -78,7 +78,7 @@ class RedisQueue:
         :param task_uuid: Идентификатор задачи
         """
         self.client.lpush(queue_name, task_uuid)
-        logger.debug(f"Задача {task_uuid} помещена в очередь {queue_name}")
+        logger.debug(f"Task {task_uuid} enqueued to {queue_name}")
 
     def dequeue(self, queue_name: str, timeout: int = 0) -> Optional[str]:
         """
@@ -91,6 +91,6 @@ class RedisQueue:
         result = self.client.brpop(queue_name, timeout=timeout)
         if result:
             task_uuid = result[1].decode()
-            logger.debug(f"Задача {task_uuid} извлечена из очереди {queue_name}")
+            logger.debug(f"Task {task_uuid} dequeued from {queue_name}")
             return task_uuid
         return None

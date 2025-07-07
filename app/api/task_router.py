@@ -60,8 +60,8 @@ class TaskRouter(APIRouter):
             :return: Ответ с UUID задачи
             """
             auth_info = self.vault.authenticate_user(authorization, action=self.who_called_me())
-            logger.info(f"Получена задача типа '{task.type}' \
-                        от пользователя '{auth_info[0]}' с ролью '{auth_info[1]}'")
+            logger.info(f"Received task of type '{task.type}' \
+                        from user '{auth_info[0]}' with role '{auth_info[1]}'")
 
             try:
                 # Извлекаем данные задачи
@@ -77,8 +77,8 @@ class TaskRouter(APIRouter):
                 self.queue.save_task(task_uuid, data)
                 self.queue.enqueue(f"{task.type.value}_INPUT", task_uuid)
 
-                logger.debug(f"Задача {task_uuid}/{task.ExternalId} \
-                             поставлена в очередь {task.type.value}_INPUT")
+                logger.debug(f"Task {task_uuid}/{task.ExternalId} \
+                             enqueued to {task.type.value}_INPUT")
 
                 return TaskResponse(
                     ExternalId=task.ExternalId,
@@ -87,10 +87,10 @@ class TaskRouter(APIRouter):
                     created = created_date
                 )
             except ValueError as ve:
-                logger.error(f"Ошибка валидации задачи: {ve}")
+                logger.error(f"Task validation error: {ve}")
                 raise HTTPException(status_code=400, detail=str(ve)) from ve
             except Exception as e:
-                logger.exception("Ошибка при обработке submit")
+                logger.exception("Error while processing submit")
                 raise HTTPException(status_code=500, detail="Internal server error") from e
 
         @self.get("/taskinfo", response_model=TaskInfo, responses={
@@ -110,8 +110,8 @@ class TaskRouter(APIRouter):
             # Проверяем авторизацию пользователя
             # и получаем информацию о нём
             auth_info = self.vault.authenticate_user(authorization, action=self.who_called_me())
-            logger.debug(f"Пользователь '{auth_info[0]}' \
-                         с ролью '{auth_info[1]}' запрашивает статус задачи {taskid}")
+            logger.debug(f"User '{auth_info[0]}' \
+                         with role '{auth_info[1]}' requests status for task {taskid}")
 
             try:
                 # Извлекаем задачу из очереди по UUID
@@ -136,12 +136,12 @@ class TaskRouter(APIRouter):
                 # Кто положил в очередь задачу и проверка типа прошла,
                 # а потом список типов или статусов изменился
                 # и когда мы вычитываем задачу, то не можем её обработать
-                logger.error(f"Ошибка валидации задачи {taskid} по типу или статусу: {ve}")
-                raise HTTPException(status_code=400, detail="Недопустимый тип задачи") from ve
+                logger.error(f"Task validation error for {taskid} by type or status: {ve}")
+                raise HTTPException(status_code=400, detail="Invalid task type") from ve
             except HTTPException as he:
                 raise he  # Переправляем HTTP исключения без изменений
             except Exception as e:
-                logger.exception("Ошибка при обработке task_info")
+                logger.exception("Error while processing task_info")
                 raise HTTPException(status_code=500, detail="Internal server error") from e
 
         @self.post("/health", response_model=ErrorResponse, responses={
@@ -156,5 +156,5 @@ class TaskRouter(APIRouter):
             try:
                 return ErrorResponse(message="All right", code=1)
             except Exception as e:
-                logger.exception("Ошибка при health check")
+                logger.exception("Health check error")
                 raise HTTPException(status_code=500, detail={"message": str(e), "code": -1}) from e

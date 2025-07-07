@@ -20,12 +20,12 @@ def create_app() -> FastAPI:
     Создаёт и настраивает FastAPI-приложение.
     Загружает конфигурацию и секреты (для совместимости с uvicorn --factory).
     """
-    logger.info("Инициализация приложения CT Task Router API")
+    logger.info("CT Task Router initialization started")
     # Настройка логирования
     setup_logging()
 
     # Создание FastAPI приложения
-    logger.debug("Создание FastAPI приложения")
+    logger.debug("FastAPI application is being created")
     app = FastAPI(
         title="CT Task Router API",
         description="REST API для постановки задач в очередь",
@@ -36,8 +36,8 @@ def create_app() -> FastAPI:
         config = get_config()
         secrets = get_secrets()
     except Exception as e:
-        logger.exception("Ошибка загрузки конфигурации или секретов")
-        raise RuntimeError("Ошибка инициализации приложения") from e
+        logger.exception("Configuration or secrets loading failed")
+        raise RuntimeError("Application initialization error") from e
 
     try:
         # Redis
@@ -58,8 +58,8 @@ def create_app() -> FastAPI:
             raise ConnectionError("Redis не отвечает на ping")
         redis_queue = RedisQueue(client=redis_client)
     except Exception as e:
-        logger.exception("Ошибка подключения к Redis")
-        raise RuntimeError("Ошибка подключения к Redis") from e
+        logger.exception("Redis connection error")
+        raise RuntimeError("Redis connection error") from e
 
     try:
         # Vault
@@ -69,15 +69,15 @@ def create_app() -> FastAPI:
 
         client = hvac.Client(url=vault_url, token=vault_token)
         if not client.is_authenticated():
-            logger.error("Не удалось аутентифицироваться в Vault с предоставленным токеном")
+            logger.error("Failed to authenticate with Vault using the provided token")
             raise HTTPException(status_code=401, detail="Vault authentication failed")
 
         vault_client = VaultClient(client=client, vault_url = vault_url, auth_path=auth_path)
     except HTTPException as e:
         raise   # Не перехватываем свои же исключения
     except Exception as e:
-        logger.exception("Ошибка подключения к Vault")
-        raise RuntimeError("Ошибка подключения к Vault") from e
+        logger.exception("Vault connection error")
+        raise RuntimeError("Vault connection error") from e
 
     task_router = TaskRouter(redis_queue=redis_queue, vault_client=vault_client)
     app.include_router(task_router)

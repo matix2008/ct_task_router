@@ -84,11 +84,11 @@ class VaultClient:
             client_id, role = self._verify(auth_info, action)
 
             # Возвращаем client_id и роль
-            logger.debug(f"JWT-аутентификация успешна для client_id {client_id} с ролью {role}")
+            logger.debug(f"JWT authentication succeeded for client_id {client_id} with role {role}")
             return client_id, role
 
         except Exception as e:
-            logger.warning(f"Ошибка аутентификации клиента {client_id} с JWT: {str(e)}")
+            logger.warning(f"Client authentication error for {client_id} with JWT: {str(e)}")
             raise e
 
     def verify_basic(self, username: str, password: str, action: str) -> tuple:
@@ -117,12 +117,11 @@ class VaultClient:
             # Извлекаем client_id и роль из метаданных и проверяем права
             client_id, role = self._verify(auth_info, action)
 
-            logger.debug(f"Basic-аутентификация успешна для пользователя \
-                         {client_id} с ролью {role}")
+            logger.debug(f"Basic authentication succeeded for user {client_id} with role {role}")
             return client_id, role
 
         except Exception as e:
-            logger.warning(f"Ошибка аутентификации клиента {client_id} с Basic: {str(e)}")
+            logger.warning(f"Client authentication error for {client_id} with Basic: {str(e)}")
             raise e
 
     def _verify(self, auth_info, action) -> tuple:

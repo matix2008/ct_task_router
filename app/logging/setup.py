@@ -46,4 +46,4 @@ def setup_logging() -> None:
         diagnose=True
     )
 
-    logger.info("Логирование инициализировано")
+    logger.info("Logging initialized")
