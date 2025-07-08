@@ -21,26 +21,35 @@ def create_app() -> FastAPI:
     Загружает конфигурацию и секреты (для совместимости с uvicorn --factory).
     """
     logger.info("CT Task Router initialization started")
-    # Настройка логирования
-    setup_logging()
 
-    # Создание FastAPI приложения
-    logger.debug("FastAPI application is being created")
-    app = FastAPI(
-        title="CT Task Router API",
-        description="REST API для постановки задач в очередь",
-        version="1.0.0"
-    )
+    app = None  # Инициализация переменной приложения
+    config = None  # Инициализация переменной конфигурации
+    secrets = None  # Инициализация переменной секретов
 
     try:
+        # Загрузка конфигурации и секретов
         config = get_config()
         secrets = get_secrets()
+
+        # Настройка логирования
+        setup_logging(full_config=config)
+
+        # Создание FastAPI приложения
+        logger.debug("FastAPI application is being created")
+        app = FastAPI(
+            title="CT Task Router API",
+            description="REST API для постановки задач в очередь",
+            version="1.0.0"
+        )
+
+        logger.debug("FastAPI application was successfully created!")
     except Exception as e:
         logger.exception("Configuration or secrets loading failed")
         raise RuntimeError("Application initialization error") from e
 
     try:
         # Redis
+        logger.debug("Redis client is being created")
         redis_url = config["queue"]["url"]
         redis_password = secrets.get("redis", {}).get("password")
 
@@ -56,13 +65,17 @@ def create_app() -> FastAPI:
         redis_client = Redis.from_url(redis_url_with_auth)
         if not redis_client.ping():
             raise ConnectionError("Redis не отвечает на ping")
+
         redis_queue = RedisQueue(client=redis_client)
+
+        logger.debug("Redis client was successfully created!")
     except Exception as e:
         logger.exception("Redis connection error")
         raise RuntimeError("Redis connection error") from e
 
     try:
         # Vault
+        logger.debug("Vault client is being created")
         vault_url = config["vault"]["url"].rstrip("/")
         auth_path = config["vault"].get("auth_path", "auth/jwt").rstrip("/")
         vault_token = secrets["vault"]["token"]
@@ -73,15 +86,24 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=401, detail="Vault authentication failed")
 
         vault_client = VaultClient(client=client, vault_url = vault_url, auth_path=auth_path)
+
+        logger.debug("Vault client was successfully created!")
     except HTTPException as e:
         raise   # Не перехватываем свои же исключения
     except Exception as e:
         logger.exception("Vault connection error")
         raise RuntimeError("Vault connection error") from e
 
-    task_router = TaskRouter(redis_queue=redis_queue, vault_client=vault_client)
-    app.include_router(task_router)
-    return app
+    try:
+        logger.debug("TaskRouter is being initialized")
+        # Инициализация маршрутизатора задач с Redis и Vault клиентами
+        task_router = TaskRouter(redis_queue=redis_queue, vault_client=vault_client)
+        app.include_router(task_router)
+        logger.debug("TaskRouter was successfully initialized!")
+        return app
+    except Exception as e:
+        logger.exception("TaskRouter initialization error")
+        raise RuntimeError("TaskRouter initialization error") from e
 
 if __name__ == "__main__":
     import uvicorn

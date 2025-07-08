@@ -6,10 +6,8 @@
 import os
 from datetime import timedelta
 from loguru import logger
-from app.config.loader import get_config
 
-
-def setup_logging() -> None:
+def setup_logging(full_config : dict) -> None:
     """
     Инициализирует логирование с параметрами из конфигурационного файла.
 
@@ -20,7 +18,7 @@ def setup_logging() -> None:
             - when: строка (например, "1 day", "00:00")
             - backupCount: количество дней хранения (используется как retention)
     """
-    config = get_config()["logging"]
+    config = full_config["logging"]
 
     log_file = config["log_file"]
     log_level = config["level"]
