@@ -59,6 +59,7 @@ class TaskRouter(APIRouter):
             :param authorization: JWT или Basic заголовок
             :return: Ответ с UUID задачи
             """
+            logger.debug("submit_task is being called")
             auth_info = self.vault.authenticate_user(authorization, action=self.who_called_me())
             logger.info(f"Received task of type '{task.type}' \
                         from user '{auth_info[0]}' with role '{auth_info[1]}'")
@@ -106,7 +107,7 @@ class TaskRouter(APIRouter):
             :param authorization: JWT или Basic заголовок
             :return: Статус задачи и результат
             """
-
+            logger.debug(f"task_info is being called for task {taskid}")
             # Проверяем авторизацию пользователя
             # и получаем информацию о нём
             auth_info = self.vault.authenticate_user(authorization, action=self.who_called_me())
@@ -153,6 +154,8 @@ class TaskRouter(APIRouter):
 
             :return: Статус "жив/не жив"
             """
+            logger.debug("Health check is being called ")
+
             try:
                 return ErrorResponse(message="All right", code=1)
             except Exception as e:

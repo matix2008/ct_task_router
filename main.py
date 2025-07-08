@@ -3,10 +3,12 @@ main.py — точка входа для запуска FastAPI-приложен
 """
 
 from urllib.parse import urlparse, urlunparse
+import time
 from fastapi import FastAPI, HTTPException
 from redis import Redis
 from loguru import logger
 import hvac
+
 
 from app.queue.redis_queue import RedisQueue
 from app.auth.security import VaultClient
@@ -14,6 +16,7 @@ from app.api.task_router import TaskRouter
 from app.config.loader import get_config, get_secrets
 from app.logging.setup import setup_logging
 
+VAULT_CONNECTION_DELAY = 3  # Задержка для корректной инициализации Vault
 
 def create_app() -> FastAPI:
     """
@@ -79,6 +82,8 @@ def create_app() -> FastAPI:
         vault_url = config["vault"]["url"].rstrip("/")
         auth_path = config["vault"].get("auth_path", "auth/jwt").rstrip("/")
         vault_token = secrets["vault"]["token"]
+
+        time.sleep(VAULT_CONNECTION_DELAY)  # Задержка для корректной инициализации Vault
 
         client = hvac.Client(url=vault_url, token=vault_token)
         if not client.is_authenticated():
