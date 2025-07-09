@@ -72,13 +72,13 @@ else
   warn "Возможно, config уже был настроен — проверяйте Vault UI."
 fi
 
-step "Создание политики noop-policy..."
-docker exec -e VAULT_ADDR=$VAULT_ADDR $VAULT_CONTAINER vault policy write noop-policy - <<EOF
-path "*" {
-  capabilities = ["read", "list"]
-}
-EOF
-ok "Политика noop-policy установлена."
+step "Создание политики noop-policy..." 
+if echo 'path "*" { capabilities = ["read", "list"] }' | \
+   docker exec -i -e VAULT_ADDR=$VAULT_ADDR $VAULT_CONTAINER vault policy write noop-policy - &>/dev/null; then
+  ok "Политика noop-policy установлена."
+else
+  warn "Ошибка при создании политики noop-policy (возможно, уже существует или возникла другая проблема)."
+fi
 
 step "Создание userpass пользователя..."
 if docker exec -e VAULT_ADDR=$VAULT_ADDR $VAULT_CONTAINER vault write auth/userpass/users/service \
@@ -104,21 +104,35 @@ else
   warn "Ошибка создания/обновления роли (возможно уже существует, проверьте вручную)."
 fi
 
-step "Генерация тестового JWT токена через Vault (identity/oidc/token)..."
-JWT=$(docker exec -e VAULT_ADDR=$VAULT_ADDR -e VAULT_TOKEN=$VAULT_TOKEN $VAULT_CONTAINER vault write -format=json identity/oidc/token \
-  subject="client1" \
-  metadata="client_id=client1,role=copytrust_site" \
-  policies="noop-policy" \
-  ttl="3600" | jq -r .data.token)
-if [[ -z "$JWT" || "$JWT" == "null" ]]; then
-  warn "JWT токен не был сгенерирован (проверьте настройки Vault)."
+step "Генерация тестового JWT токена..."
+
+PRIVATE_KEY="$KEYS_DIR/private.pem"
+if [[ ! -f "$PRIVATE_KEY" ]]; then
+  warn "Приватный ключ не найден ($PRIVATE_KEY). Сначала выполните jwt_keys.sh!"
+  TEST_JWT=""
+else
+  HEADER='{"alg":"RS256","typ":"JWT"}'
+  EXP=$(($(date +%s) + 600))
+  PAYLOAD="{\"sub\":\"client1\",\"client_id\":\"client1\",\"role\":\"copytrust_site\",\"iss\":\"vault\",\"exp\":$EXP}"
+
+  b64enc() { openssl base64 -e -A | tr '+/' '-_' | tr -d '='; }
+
+  JWT_HEADER=$(echo -n "$HEADER" | b64enc)
+  JWT_PAYLOAD=$(echo -n "$PAYLOAD" | b64enc)
+  JWT_HEADER_PAYLOAD="$JWT_HEADER.$JWT_PAYLOAD"
+  JWT_SIGNATURE=$(echo -n "$JWT_HEADER_PAYLOAD" | openssl dgst -sha256 -sign "$PRIVATE_KEY" | b64enc)
+  TEST_JWT="$JWT_HEADER_PAYLOAD.$JWT_SIGNATURE"
+fi
+
+if [[ -z "$TEST_JWT" ]]; then
+  warn "JWT токен не был сгенерирован (нет приватного ключа)."
 else
   ok "JWT токен сгенерирован."
 fi
 
 echo "\n====================================="
 echo -e "\033[1;32mГотово! Vault настроен.\033[0m"
-echo "Bearer $JWT"
+echo "Bearer $TEST_JWT"
 echo "API: http://localhost:8000"
 echo "Vault UI: http://localhost:8200"
 echo "====================================="
